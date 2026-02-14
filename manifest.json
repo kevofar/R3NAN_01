@@ -1,15 +1,17 @@
 {
   "name": "The R3NAN-01",
   "short_name": "R3NAN",
-  "start_url": "index.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0a0a0a",
   "theme_color": "#d4af37",
+  "description": "The Spirit of RENAN awaits.",
   "icons": [
     {
       "src": "playstore-icon.jpg",
       "sizes": "512x512",
-      "type": "image/jpeg"
+      "type": "image/jpeg",
+      "purpose": "any maskable"
     }
   ]
 }
