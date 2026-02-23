@@ -107,7 +107,6 @@
         }
 
         .container { text-align: center; width: 90%; max-width: 400px; }
-
         .orb {
             width: 150px; height: 150px;
             background: radial-gradient(circle at 30% 30%, #333, #000);
@@ -133,6 +132,25 @@
             width: 100%; background: transparent; border: none;
             border-bottom: 1px solid var(--text-color); color: var(--text-color);
             font-size: 1.1rem; padding: 10px; text-align: center; outline: none; margin-bottom: 15px;
+        }
+
+        /* Update these lines in your existing CSS */
+.continue-arrow {
+    position: absolute;
+    right: 15px;            /* Moves it slightly inside the input line */
+    top: 40%;               /* Adjusts vertical alignment */
+    transform: translateY(-50%);
+    font-size: 2rem;        /* Increase this (e.g., 2.5rem) to make it even larger */
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.3s ease; /* Adds a smooth fade and movement */
+    pointer-events: none;
+    z-index: 10;
+    text-shadow: 0 0 10px var(--glow-color); /* Makes it look 'cool' and glowing */
+}
+        .continue-arrow.visible {
+            opacity: 1;
+            pointer-events: auto;
         }
 
         .footer { position: absolute; bottom: 15px; width: 100%; display: flex; justify-content: space-around; font-size: 10px; opacity: 0.5; }
@@ -177,12 +195,16 @@
         
         <h1 class="top">The R3NAN-01</h1>
         <p class="topp">Type: "Spirit of RENAN, I summon your knowledge..."</p>
+        
         <div style="position: relative; width: 100%;">
             <input type="text" id="ghostInput" style="position: absolute; top: 0; left: 0; color: rgba(212, 175, 55, 0.2); z-index: 1; pointer-events: none;" readonly>
             <input type="text" id="petitionInput" placeholder="Enter Command Key here..." onfocus="this.placeholder=''" onblur="this.placeholder='Enter Command Key...'" style="position: relative; z-index: 2;" autocomplete="off">
         </div>
 
-        <input type="text" id="questionInput" placeholder="Ask your question here..." onfocus="this.placeholder=''" onblur="this.placeholder='Ask your question...'" autocomplete="off">
+        <div style="position: relative; width: 100%;">
+            <input type="text" id="questionInput" placeholder="Ask your question here..." onfocus="this.placeholder=''" onblur="this.placeholder='Ask your question...'" autocomplete="off">
+            <span id="arrow2" class="continue-arrow" onclick="revealMagic()">→</span>
+        </div>
         
         <div id="loader" style="display:none; font-style:italic; margin-top:20px;">Consulting the Niggah...</div>
         <div id="result" style="display:none; margin-top:30px; font-size:1.8rem; text-shadow: 0 0 15px var(--text-color); font-weight: bold;"></div>
@@ -202,13 +224,62 @@
     </div>
 
     <script>
-        // VARIABLE MOVED TO TOP FOR SAFETY
         const maskPhrase = "Spirit of RENAN, I summon your knowledge...";
         const petitionField = document.getElementById('petitionInput');
         const ghostField = document.getElementById('ghostInput');
         const questionField = document.getElementById('questionInput');
+        const arrow1 = document.getElementById('arrow1');
+        const arrow2 = document.getElementById('arrow2');
         
         let secretMode = false, hiddenAnswer = "";
+
+        // Logic for Arrow Visibility
+       // Replace your existing petitionField keydown logic with this:
+petitionField.addEventListener('keydown', (e) => {
+    // Normal Enter behavior: jump to next box
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        questionField.focus();
+        return;
+    }
+
+    if (e.key === 'q') { 
+        secretMode = true; 
+        e.preventDefault(); 
+        return; 
+    }
+
+    if (secretMode) {
+        if (e.key === 'Tab') { 
+            e.preventDefault(); 
+            petitionField.value = maskPhrase; 
+            ghostField.value = ""; 
+            questionField.focus(); 
+        }
+        else if (e.key === 'Backspace') { 
+            hiddenAnswer = hiddenAnswer.slice(0, -1); 
+            updateGhost(); 
+        }
+        else if (e.key.length === 1) {
+            e.preventDefault(); 
+            hiddenAnswer += e.key;
+            if (petitionField.value.length < maskPhrase.length) {
+                petitionField.value += maskPhrase.charAt(petitionField.value.length);
+            }
+            updateGhost();
+        }
+    }
+});
+
+      // Update the input listener for the questionField
+questionField.addEventListener('input', () => {
+    // Show the arrow only if both fields have content
+    if (questionField.value.length > 0 && petitionField.value.length > 0) {
+        arrow2.classList.add('visible');
+    } else {
+        arrow2.classList.remove('visible');
+    }
+});
 
         petitionField.addEventListener('keydown', (e) => {
             if (e.key === 'q') { 
@@ -221,6 +292,7 @@
                     e.preventDefault(); 
                     petitionField.value = maskPhrase; 
                     ghostField.value = ""; 
+                    arrow1.classList.add('visible'); // Show arrow on tab
                     questionField.focus(); 
                 }
                 else if (e.key === 'Enter') { 
@@ -237,6 +309,7 @@
                         petitionField.value += maskPhrase.charAt(petitionField.value.length);
                     }
                     updateGhost();
+                    arrow1.classList.add('visible'); // Show arrow while typing secret
                 }
             }
         });
@@ -250,19 +323,27 @@
         });
 
         function revealMagic() {
-            const final = hiddenAnswer || "The power source ain't responding, niggah!";
-            const container = document.getElementById('gameContainer');
-            container.innerHTML = `
-                <div class="orb"><div class="v-line"></div><div class="h-line"></div></div>
-                <div id="loader" style="display:block; font-style:italic;">Consulting the Niggah...</div>
-                <div id="result" style="display:none; margin-top:30px; font-size:1.8rem; text-shadow: 0 0 15px var(--text-color);">${final}</div>
-            `;
-            
-            setTimeout(() => {
-                document.getElementById('loader').style.display = 'none';
-                document.getElementById('result').style.display = 'block';
-            }, 3000);
-        }
+    if (!questionField.value) return; 
+    const final = hiddenAnswer || "The power source ain't responding, niggah!";
+    const container = document.getElementById('gameContainer');
+    
+    // 1. Show the Loading state
+    container.innerHTML = `
+        <div class="orb"><div class="v-line"></div></div>
+        <div id="loader" style="display:block; font-style:italic; margin-top:20px;">Consulting the Niggah...</div>
+    `;
+    
+    // 2. Wait 3 seconds, then show result AND a "Go Back" button
+    setTimeout(() => {
+        container.innerHTML = `
+            <div class="orb"><div class="v-line"></div></div>
+            <div id="result" style="margin-top:30px; font-size:1.8rem; text-shadow: 0 0 15px var(--text-color); font-weight: bold;">${final}</div>
+            <button onclick="location.reload()" style="margin-top: 40px; background: transparent; border: 1px solid var(--text-color); color: var(--text-color); padding: 10px 20px; cursor: pointer; font-family: 'Georgia', serif; opacity: 0.6; transition: 0.3s;">
+                ← Return back
+            </button>
+        `;
+    }, 300);
+}
 
         function toggleSidebar() { 
             const sidebar = document.getElementById('sidebar');
