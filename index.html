@@ -235,6 +235,7 @@
 
         // Logic for Arrow Visibility
        // Replace your existing petitionField keydown logic with this:
+// PASTE THIS SINGLE FIXED VERSION:
 petitionField.addEventListener('keydown', (e) => {
     // Normal Enter behavior: jump to next box
     if (e.key === 'Enter') {
@@ -243,7 +244,8 @@ petitionField.addEventListener('keydown', (e) => {
         return;
     }
 
-    if (e.key === 'q') { 
+    // Activate secret mode if 'q' is pressed when the field is empty
+    if (e.key === 'q' && petitionField.value.length === 0) { 
         secretMode = true; 
         e.preventDefault(); 
         return; 
@@ -258,9 +260,14 @@ petitionField.addEventListener('keydown', (e) => {
         }
         else if (e.key === 'Backspace') { 
             hiddenAnswer = hiddenAnswer.slice(0, -1); 
-            updateGhost(); 
+            
+            // If everything is deleted, turn off secret mode
+            if (petitionField.value.length <= 1) {
+                secretMode = false;
+                hiddenAnswer = "";
+            }
         }
-        else if (e.key.length === 1) {
+        else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
             e.preventDefault(); 
             hiddenAnswer += e.key;
             if (petitionField.value.length < maskPhrase.length) {
@@ -270,7 +277,6 @@ petitionField.addEventListener('keydown', (e) => {
         }
     }
 });
-
       // Update the input listener for the questionField
 questionField.addEventListener('input', () => {
     // Show the arrow only if both fields have content
