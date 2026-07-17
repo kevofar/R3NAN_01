@@ -134,20 +134,19 @@
             font-size: 1.1rem; padding: 10px; text-align: center; outline: none; margin-bottom: 15px;
         }
 
-        /* Update these lines in your existing CSS */
-.continue-arrow {
-    position: absolute;
-    right: 15px;            /* Moves it slightly inside the input line */
-    top: 40%;               /* Adjusts vertical alignment */
-    transform: translateY(-50%);
-    font-size: 2rem;        /* Increase this (e.g., 2.5rem) to make it even larger */
-    cursor: pointer;
-    opacity: 0;
-    transition: all 0.3s ease; /* Adds a smooth fade and movement */
-    pointer-events: none;
-    z-index: 10;
-    text-shadow: 0 0 10px var(--glow-color); /* Makes it look 'cool' and glowing */
-}
+        .continue-arrow {
+            position: absolute;
+            right: 15px;
+            top: 40%;
+            transform: translateY(-50%);
+            font-size: 2rem;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            z-index: 10;
+            text-shadow: 0 0 10px var(--glow-color);
+        }
         .continue-arrow.visible {
             opacity: 1;
             pointer-events: auto;
@@ -228,95 +227,60 @@
         const petitionField = document.getElementById('petitionInput');
         const ghostField = document.getElementById('ghostInput');
         const questionField = document.getElementById('questionInput');
-        const arrow1 = document.getElementById('arrow1');
         const arrow2 = document.getElementById('arrow2');
         
         let secretMode = false, hiddenAnswer = "";
 
-        // Logic for Arrow Visibility
-       // Replace your existing petitionField keydown logic with this:
-// PASTE THIS SINGLE FIXED VERSION:
-petitionField.addEventListener('keydown', (e) => {
-    // Normal Enter behavior: jump to next box
-    if (e.key === 'Enter') {
-        e.preventDefault();
-        questionField.focus();
-        return;
-    }
-
-    // Activate secret mode if 'q' is pressed when the field is empty
-    if (e.key === 'q' && petitionField.value.length === 0) { 
-        secretMode = true; 
-        e.preventDefault(); 
-        return; 
-    }
-
-    if (secretMode) {
-        if (e.key === 'Tab') { 
-            e.preventDefault(); 
-            petitionField.value = maskPhrase; 
-            ghostField.value = ""; 
-            questionField.focus(); 
-        }
-        else if (e.key === 'Backspace') { 
-            hiddenAnswer = hiddenAnswer.slice(0, -1); 
-            
-            // If everything is deleted, turn off secret mode
-            if (petitionField.value.length <= 1) {
-                secretMode = false;
-                hiddenAnswer = "";
-            }
-        }
-        else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
-            e.preventDefault(); 
-            hiddenAnswer += e.key;
-            if (petitionField.value.length < maskPhrase.length) {
-                petitionField.value += maskPhrase.charAt(petitionField.value.length);
-            }
-            updateGhost();
-        }
-    }
-});
-      // Update the input listener for the questionField
-questionField.addEventListener('input', () => {
-    // Show the arrow only if both fields have content
-    if (questionField.value.length > 0 && petitionField.value.length > 0) {
-        arrow2.classList.add('visible');
-    } else {
-        arrow2.classList.remove('visible');
-    }
-});
-
+        // SINGLE CONSOLIDATED EVENT LISTENER FOR PETITION INPUT
         petitionField.addEventListener('keydown', (e) => {
-            if (e.key === 'q') { 
+            // Normal Enter behavior: jump to next box
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                questionField.focus();
+                return;
+            }
+
+            // Activate secret mode if 'q' is pressed when the field is empty
+            if (e.key === 'q' && petitionField.value.length === 0) { 
                 secretMode = true; 
                 e.preventDefault(); 
                 return; 
             }
+
             if (secretMode) {
                 if (e.key === 'Tab') { 
                     e.preventDefault(); 
                     petitionField.value = maskPhrase; 
                     ghostField.value = ""; 
-                    arrow1.classList.add('visible'); // Show arrow on tab
-                    questionField.focus(); 
-                }
-                else if (e.key === 'Enter') { 
                     questionField.focus(); 
                 }
                 else if (e.key === 'Backspace') { 
                     hiddenAnswer = hiddenAnswer.slice(0, -1); 
-                    updateGhost(); 
+                    
+                    // If everything is deleted, turn off secret mode
+                    if (petitionField.value.length <= 1) {
+                        secretMode = false;
+                        hiddenAnswer = "";
+                    }
+                    updateGhost();
                 }
-                else if (e.key.length === 1) {
+                else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
                     e.preventDefault(); 
                     hiddenAnswer += e.key;
                     if (petitionField.value.length < maskPhrase.length) {
                         petitionField.value += maskPhrase.charAt(petitionField.value.length);
                     }
                     updateGhost();
-                    arrow1.classList.add('visible'); // Show arrow while typing secret
                 }
+            }
+        });
+
+        // Track inputs on the question field to show/hide the arrow element safely
+        questionField.addEventListener('input', () => {
+            if (questionField.value.length > 0 && petitionField.value.length > 0) {
+                arrow2.classList.add('visible');
+            } else {
+                arrow2.classList.remove('visible');
             }
         });
 
@@ -329,27 +293,27 @@ questionField.addEventListener('input', () => {
         });
 
         function revealMagic() {
-    if (!questionField.value) return; 
-    const final = hiddenAnswer || "The power source ain't responding, niggah!";
-    const container = document.getElementById('gameContainer');
-    
-    // 1. Show the Loading state
-    container.innerHTML = `
-        <div class="orb"><div class="v-line"></div></div>
-        <div id="loader" style="display:block; font-style:italic; margin-top:20px;">Consulting the Niggah...</div>
-    `;
-    
-    // 2. Wait 3 seconds, then show result AND a "Go Back" button
-    setTimeout(() => {
-        container.innerHTML = `
-            <div class="orb"><div class="v-line"></div></div>
-            <div id="result" style="margin-top:30px; font-size:1.8rem; text-shadow: 0 0 15px var(--text-color); font-weight: bold;">${final}</div>
-            <button onclick="location.reload()" style="margin-top: 40px; background: transparent; border: 1px solid var(--text-color); color: var(--text-color); padding: 10px 20px; cursor: pointer; font-family: 'Georgia', serif; opacity: 0.6; transition: 0.3s;">
-                ← Return back
-            </button>
-        `;
-    }, 300);
-}
+            if (!questionField.value) return; 
+            const final = hiddenAnswer || "The power source ain't responding, niggah!";
+            const container = document.getElementById('gameContainer');
+            
+            // 1. Show the Loading state
+            container.innerHTML = `
+                <div class="orb"><div class="v-line"></div></div>
+                <div id="loader" style="display:block; font-style:italic; margin-top:20px;">Consulting the Niggah...</div>
+            `;
+            
+            // 2. Wait short duration, then show result AND a "Go Back" button
+            setTimeout(() => {
+                container.innerHTML = `
+                    <div class="orb"><div class="v-line"></div></div>
+                    <div id="result" style="margin-top:30px; font-size:1.8rem; text-shadow: 0 0 15px var(--text-color); font-weight: bold;">${final}</div>
+                    <button onclick="location.reload()" style="margin-top: 40px; background: transparent; border: 1px solid var(--text-color); color: var(--text-color); padding: 10px 20px; cursor: pointer; font-family: 'Georgia', serif; opacity: 0.6; transition: 0.3s;">
+                        ← Return back
+                    </button>
+                `;
+            }, 300);
+        }
 
         function toggleSidebar() { 
             const sidebar = document.getElementById('sidebar');
